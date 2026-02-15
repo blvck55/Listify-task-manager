@@ -208,7 +208,7 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
                                 if (ok) {
                                     val destination = if (adminMode) Routes.ADMIN else Routes.MAIN
 
-                                    // Clear login from back stack (optional but clean)
+                                    // Clear login from back stack
                                     nav.navigate(destination) {
                                         popUpTo(Routes.LANDING) { inclusive = false }
                                         launchSingleTop = true
