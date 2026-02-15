@@ -5,7 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
@@ -27,9 +27,12 @@ import com.example.listify.utils.getScreenType
 @Composable
 fun AdminDashboardScreen(nav: NavHostController) {
 
+    // Detect device type for responsive layout adjustments
     val screenType = getScreenType()
 
-    // 🔐 Block access if not admin
+    // ------------------------------------------
+    // Security check: Allow only ADMIN users
+    // ------------------------------------------
     LaunchedEffect(Unit) {
         if (AuthManager.role != UserRole.ADMIN) {
             nav.navigate("${Routes.LOGIN}?admin=true") {
@@ -37,6 +40,8 @@ fun AdminDashboardScreen(nav: NavHostController) {
             }
         }
     }
+
+    // Prevent UI rendering if user is not admin
     if (AuthManager.role != UserRole.ADMIN) return
 
     BackgroundPage(isLanding = false) {
@@ -54,7 +59,9 @@ fun AdminDashboardScreen(nav: NavHostController) {
                 )
             ) {
 
-                // ✅ Header glass bar
+                // ------------------------------------------
+                // Header Section with Back Navigation
+                // ------------------------------------------
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
@@ -67,13 +74,17 @@ fun AdminDashboardScreen(nav: NavHostController) {
                             .padding(horizontal = 10.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+
+                        // Back button navigation
                         IconButton(onClick = { nav.popBackStack() }) {
                             Icon(
-                                Icons.Default.ArrowBack,
-                                contentDescription = "Back",
-                                tint = MaterialTheme.colorScheme.onSurface
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
                             )
+
                         }
+
+                        // Screen title
                         Text(
                             "ADMIN DASHBOARD",
                             style = MaterialTheme.typography.titleLarge,
@@ -85,7 +96,10 @@ fun AdminDashboardScreen(nav: NavHostController) {
 
                 Spacer(Modifier.height(12.dp))
 
-                // ✅ Stats row (matches mockup)
+                // ------------------------------------------
+                // Statistics Section
+                // Displays total and completed tasks
+                // ------------------------------------------
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -104,7 +118,9 @@ fun AdminDashboardScreen(nav: NavHostController) {
 
                 Spacer(Modifier.height(12.dp))
 
-                // ✅ MANAGE TASKS header strip (so it’s visible)
+                // ------------------------------------------
+                // Manage Tasks Section Header
+                // ------------------------------------------
                 Card(
                     shape = RoundedCornerShape(14.dp),
                     colors = CardDefaults.cardColors(
@@ -121,11 +137,16 @@ fun AdminDashboardScreen(nav: NavHostController) {
 
                 Spacer(Modifier.height(10.dp))
 
-                // ✅ Task list
+                // ------------------------------------------
+                // Task List Section
+                // Displays all active tasks with actions
+                // ------------------------------------------
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.weight(1f)
                 ) {
+
+                    // Loop through all active tasks
                     items(TaskStore.tasks) { task ->
 
                         Card(
@@ -137,11 +158,14 @@ fun AdminDashboardScreen(nav: NavHostController) {
                         ) {
                             Column(Modifier.padding(14.dp)) {
 
+                                // Task title
                                 Text(
                                     task.title,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
+
+                                // Due date display
                                 Text(
                                     "Due: ${task.dueDate}",
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
@@ -149,13 +173,19 @@ fun AdminDashboardScreen(nav: NavHostController) {
 
                                 Spacer(Modifier.height(10.dp))
 
+                                // ------------------------------------------
+                                // Action Buttons: Complete & Delete
+                                // ------------------------------------------
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
 
+                                    // Mark task as completed
                                     OutlinedButton(
-                                        onClick = { TaskStore.completeTask(task.id) },
+                                        onClick = {
+                                            TaskStore.completeTask(task.id)
+                                        },
                                         modifier = Modifier.weight(1f),
                                         shape = RoundedCornerShape(12.dp),
                                         colors = ButtonDefaults.outlinedButtonColors(
@@ -167,8 +197,11 @@ fun AdminDashboardScreen(nav: NavHostController) {
                                         Text("Complete")
                                     }
 
+                                    // Delete task permanently
                                     OutlinedButton(
-                                        onClick = { TaskStore.deleteTask(task.id) },
+                                        onClick = {
+                                            TaskStore.deleteTask(task.id)
+                                        },
                                         modifier = Modifier.weight(1f),
                                         shape = RoundedCornerShape(12.dp),
                                         colors = ButtonDefaults.outlinedButtonColors(
@@ -183,12 +216,16 @@ fun AdminDashboardScreen(nav: NavHostController) {
                             }
                         }
                     }
+
                     item { Spacer(Modifier.height(10.dp)) }
                 }
 
                 Spacer(Modifier.height(12.dp))
 
-                // ✅ Logout button matches mockup style
+                // ------------------------------------------
+                // Logout Button
+                // Clears session and redirects to login
+                // ------------------------------------------
                 Button(
                     onClick = {
                         AuthManager.logout()
@@ -210,8 +247,13 @@ fun AdminDashboardScreen(nav: NavHostController) {
     }
 }
 
+// ------------------------------------------
+// Reusable Statistics Card Component
+// Used to display dashboard metrics
+// ------------------------------------------
 @Composable
 private fun StatCard(title: String, value: String, modifier: Modifier) {
+
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
@@ -219,13 +261,19 @@ private fun StatCard(title: String, value: String, modifier: Modifier) {
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.80f)
         )
     ) {
+
         Column(Modifier.padding(14.dp)) {
+
+            // Title of statistic
             Text(
                 title,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
             )
+
             Spacer(Modifier.height(6.dp))
+
+            // Numeric value of statistic
             Text(
                 value,
                 style = MaterialTheme.typography.headlineSmall,

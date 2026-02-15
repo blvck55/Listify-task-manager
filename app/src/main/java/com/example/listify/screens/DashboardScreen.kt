@@ -30,24 +30,31 @@ fun DashboardScreen(
     goAddEdit: () -> Unit,
     goHistory: () -> Unit
 ) {
-
+    // Read device configuration to support responsive UI
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val isTablet = configuration.screenWidthDp > 600
 
+    // Dialog state: controls whether delete confirmation is visible
     var showDeleteDialog by remember { mutableStateOf(false) }
+
+    // Stores task info for the delete confirmation dialog
     var selectedTitle by remember { mutableStateOf("") }
     var selectedId by remember { mutableStateOf("") }
 
+    // Background wrapper provides consistent theme/background across screens
     BackgroundPage(isLanding = false) {
 
+        // Main page layout
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
 
-            //  HEADER WITH VISIBLE ICONS
+            // ---------------------------------------------------------
+            // HEADER CARD (Title, Role badge, Admin button, Add button)
+            // ---------------------------------------------------------
             Card(
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
@@ -64,6 +71,7 @@ fun DashboardScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
 
+                    // Left side: Title + Role badge
                     Row(verticalAlignment = Alignment.CenterVertically) {
 
                         Text(
@@ -75,17 +83,23 @@ fun DashboardScreen(
 
                         Spacer(Modifier.width(10.dp))
 
+                        // Determine badge text based on current user role
                         val badgeText = when (AuthManager.role) {
                             UserRole.ADMIN -> "ADMIN"
                             UserRole.USER -> "USER"
                             else -> "GUEST"
                         }
 
+                        // Display role badge component
                         RoleBadge(badgeText)
                     }
 
+                    // Right side: Admin icon + Add icon
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
 
+                        // Admin button:
+                        // If admin -> open admin dashboard
+                        // If not -> redirect to login page requesting admin access
                         IconButton(onClick = {
                             if (AuthManager.role == UserRole.ADMIN) {
                                 rootNav.navigate(Routes.ADMIN)
@@ -100,6 +114,7 @@ fun DashboardScreen(
                             )
                         }
 
+                        // Add button: go to Add/Edit screen
                         IconButton(onClick = goAddEdit) {
                             Icon(
                                 imageVector = Icons.Default.Add,
@@ -113,7 +128,10 @@ fun DashboardScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            //  Task History Button
+            // ---------------------------------------------------------
+            // TASK HISTORY BUTTON
+            // Navigates to a screen that shows completed/history tasks
+            // ---------------------------------------------------------
             Button(
                 onClick = goHistory,
                 modifier = Modifier.fillMaxWidth(),
@@ -127,19 +145,32 @@ fun DashboardScreen(
 
             Spacer(Modifier.height(12.dp))
 
+            // Read tasks from TaskStore (in-memory data source in this project)
             val tasks = TaskStore.tasks
 
-            //  Responsive layout
+            // ---------------------------------------------------------
+            // RESPONSIVE TASK LIST
+            // Phone portrait: LazyColumn (1 column)
+            // Tablet: 3-column grid style using Rows
+            // Landscape phone: 2-column grid style using Rows
+            // ---------------------------------------------------------
             when {
+                // Phone portrait layout (single column, scrollable)
                 !isLandscape && !isTablet -> {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         items(tasks) { task ->
                             TaskCard(
                                 task = task,
+
+                                // Open task detail screen on card click
                                 onClick = {
                                     rootNav.navigate("${Routes.TASK_DETAIL}/${task.id}")
                                 },
+
+                                // Edit action (currently navigates to Add/Edit screen)
                                 onEdit = { goAddEdit() },
+
+                                // Delete action (opens confirmation dialog)
                                 onDelete = {
                                     selectedTitle = task.title
                                     selectedId = task.id
@@ -147,14 +178,21 @@ fun DashboardScreen(
                                 }
                             )
                         }
+
+                        // Bottom spacing so content does not get hidden by navigation/UI
                         item { Spacer(Modifier.height(80.dp)) }
                     }
                 }
 
+                // Tablet layout (3 columns)
                 isTablet -> {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                        // Chunk tasks in groups of 3 for each row
                         tasks.chunked(3).forEach { rowItems ->
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                                // Render each task as a card in the row
                                 rowItems.forEach { task ->
                                     Box(modifier = Modifier.weight(1f)) {
                                         TaskCard(
@@ -171,17 +209,24 @@ fun DashboardScreen(
                                         )
                                     }
                                 }
+
+                                // Add empty spacers if the row has fewer than 3 items
                                 repeat(3 - rowItems.size) { Spacer(Modifier.weight(1f)) }
                             }
                         }
+
                         Spacer(Modifier.height(80.dp))
                     }
                 }
 
+                // Landscape phone layout (2 columns)
                 else -> {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                        // Chunk tasks in groups of 2 for each row
                         tasks.chunked(2).forEach { rowItems ->
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+
                                 rowItems.forEach { task ->
                                     Box(modifier = Modifier.weight(1f)) {
                                         TaskCard(
@@ -198,29 +243,47 @@ fun DashboardScreen(
                                         )
                                     }
                                 }
+
+                                // If only one item exists in this row, fill the second slot with spacer
                                 if (rowItems.size == 1) Spacer(Modifier.weight(1f))
                             }
                         }
+
                         Spacer(Modifier.height(80.dp))
                     }
                 }
             }
         }
 
-        //  Delete Dialog
+        // ---------------------------------------------------------
+        // DELETE CONFIRMATION DIALOG
+        // Shows selected task name and confirms deletion
+        // ---------------------------------------------------------
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
+
+                // Dialog title
                 title = { Text("Delete Task") },
+
+                // Dialog message with task title
                 text = { Text("Delete \"$selectedTitle\"?") },
+
+                // Confirm button deletes task from TaskStore
                 confirmButton = {
                     TextButton(onClick = {
                         TaskStore.deleteTask(selectedId)
                         showDeleteDialog = false
-                    }) { Text("DELETE") }
+                    }) {
+                        Text("DELETE")
+                    }
                 },
+
+                // Cancel button closes dialog without deleting
                 dismissButton = {
-                    TextButton(onClick = { showDeleteDialog = false }) { Text("CANCEL") }
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("CANCEL")
+                    }
                 }
             )
         }

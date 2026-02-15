@@ -2,7 +2,7 @@ package com.example.listify.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// 🎯 Your Mockup Blue (adjust if needed)
+// Primary
 val PrimaryBlue = Color(0xFF1E5FBF)
 val PrimaryBlueLight = Color(0xFF2F74D0)
 

@@ -32,20 +32,28 @@ import kotlinx.coroutines.launch
 @Composable
 fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
 
+    // Stores error message shown under the password field
     var error by remember { mutableStateOf("") }
+
+    // Form input states
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
+    // Detect device type for responsive card width
     val screenType = getScreenType()
 
-    //  Entrance animation
+    // ---------------------------------------------------------
+    // Screen entrance animation: delays then shows content
+    // ---------------------------------------------------------
     var showContent by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(150)
         showContent = true
     }
 
-    //  Logo float (micro-interaction)
+    // ---------------------------------------------------------
+    // Logo floating animation (continuous micro-interaction)
+    // ---------------------------------------------------------
     val infinite = rememberInfiniteTransition(label = "logoFloat")
     val logoOffset by infinite.animateFloat(
         initialValue = 0f,
@@ -57,7 +65,9 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
         label = "logoOffset"
     )
 
-    //  Button press animation
+    // ---------------------------------------------------------
+    // Button press micro-animation: scales slightly when pressed
+    // ---------------------------------------------------------
     var pressed by remember { mutableStateOf(false) }
     val buttonScale by animateFloatAsState(
         targetValue = if (pressed) 0.97f else 1f,
@@ -66,6 +76,9 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
     )
     val scope = rememberCoroutineScope()
 
+    // ---------------------------------------------------------
+    // Shared OutlinedTextField colors (glass style + consistent UI)
+    // ---------------------------------------------------------
     val tfColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = MaterialTheme.colorScheme.onSurface,
         unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -78,8 +91,10 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
         cursorColor = MaterialTheme.colorScheme.primary
     )
 
+    // Background wrapper for consistent theme/styling
     BackgroundPage(isLanding = false) {
 
+        // Center the login card in the screen
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -87,6 +102,7 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
             contentAlignment = Alignment.Center
         ) {
 
+            // AnimatedVisibility adds fade + slide entrance transition
             AnimatedVisibility(
                 visible = showContent,
                 enter = fadeIn(tween(350)) + slideInVertically(
@@ -94,6 +110,8 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
                     animationSpec = tween(350, easing = FastOutSlowInEasing)
                 )
             ) {
+
+                // Glass-style login panel
                 Card(
                     modifier = Modifier.fillMaxWidth(
                         if (screenType == ScreenType.TABLET) 0.55f else 1f
@@ -103,11 +121,13 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
                         containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.60f)
                     )
                 ) {
+
                     Column(
                         modifier = Modifier.padding(18.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
 
+                        // App logo (with floating animation offset)
                         Image(
                             painter = painterResource(R.drawable.listify_logo),
                             contentDescription = null,
@@ -118,6 +138,7 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
 
                         Spacer(Modifier.height(10.dp))
 
+                        // Title changes depending on admin/user mode
                         Text(
                             text = if (adminMode) "ADMIN\nLOGIN" else "WELCOME\nBACK!",
                             style = MaterialTheme.typography.headlineMedium,
@@ -127,6 +148,10 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
 
                         Spacer(Modifier.height(14.dp))
 
+                        // ---------------------------------------------------------
+                        // Email input field
+                        // Clears error when user starts typing again
+                        // ---------------------------------------------------------
                         OutlinedTextField(
                             value = email,
                             onValueChange = { email = it; error = "" },
@@ -138,6 +163,10 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
 
                         Spacer(Modifier.height(10.dp))
 
+                        // ---------------------------------------------------------
+                        // Password input field (hidden text)
+                        // Clears error when user starts typing again
+                        // ---------------------------------------------------------
                         OutlinedTextField(
                             value = password,
                             onValueChange = { password = it; error = "" },
@@ -147,6 +176,7 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
                             colors = tfColors
                         )
 
+                        // Show validation or login errors
                         if (error.isNotBlank()) {
                             Spacer(Modifier.height(10.dp))
                             Text(error, color = MaterialTheme.colorScheme.error)
@@ -154,34 +184,47 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
 
                         Spacer(Modifier.height(14.dp))
 
+                        // ---------------------------------------------------------
+                        // Login button
+                        // Performs input validation + calls AuthManager login
+                        // ---------------------------------------------------------
                         Button(
                             onClick = {
-                                //  Input validation
+                                // Read safe/trimmed inputs
                                 val e = email.trim()
                                 val p = password.trim()
 
+                                // Validate email format
                                 if (!Patterns.EMAIL_ADDRESS.matcher(e).matches()) {
                                     error = "Enter a valid email address"
                                     return@Button
                                 }
+
+                                // Validate password length (basic rule for demo)
                                 if (p.length < 6) {
                                     error = "Password must be at least 6 characters"
                                     return@Button
                                 }
 
-                                //  press micro feedback
+                                // Trigger button press animation feedback
                                 pressed = true
                                 scope.launch { delay(90); pressed = false }
 
-                                //  credential validation
+                                // Perform role-based credential validation
                                 if (adminMode) {
                                     val ok = AuthManager.loginAdmin(e, p)
-                                    if (ok) nav.navigate(Routes.ADMIN)
-                                    else error = "Invalid admin credentials (admin@listify.com / Admin123)"
+                                    if (ok) {
+                                        nav.navigate(Routes.ADMIN)
+                                    } else {
+                                        error = "Invalid admin credentials (admin@listify.com / Admin123)"
+                                    }
                                 } else {
                                     val ok = AuthManager.loginUser(e, p)
-                                    if (ok) nav.navigate(Routes.MAIN)
-                                    else error = "Invalid user credentials (user@listify.com / User123)"
+                                    if (ok) {
+                                        nav.navigate(Routes.MAIN)
+                                    } else {
+                                        error = "Invalid user credentials (user@listify.com / User123)"
+                                    }
                                 }
                             },
                             modifier = Modifier
@@ -198,6 +241,11 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
 
                         Spacer(Modifier.height(10.dp))
 
+                        // ---------------------------------------------------------
+                        // Navigation link under the button
+                        // User mode -> go to Register
+                        // Admin mode -> go back to User login
+                        // ---------------------------------------------------------
                         if (!adminMode) {
                             TextButton(onClick = { nav.navigate(Routes.REGISTER) }) {
                                 Text("Don’t have an account? REGISTER")
@@ -208,7 +256,9 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
                             }
                         }
 
-                        //  Optional helper line for demo clarity
+                        // ---------------------------------------------------------
+                        // Demo helper line to show test credentials
+                        // ---------------------------------------------------------
                         Spacer(Modifier.height(6.dp))
                         Text(
                             text = if (adminMode)

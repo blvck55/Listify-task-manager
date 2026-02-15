@@ -1,64 +1,51 @@
 package com.example.listify.navigation
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
-import com.google.accompanist.navigation.animation.composable
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.listify.screens.*
 import com.example.listify.ui.theme.ThemeMode
-import com.google.accompanist.navigation.animation.AnimatedNavHost
 
-@OptIn(ExperimentalAnimationApi::class)
+// ---------------------------------------------------------
+// NavGraph (Official Navigation Compose version)
+// Removes accompanist AnimatedNavHost deprecated warnings.
+// Handles all app routes in one place.
+// ---------------------------------------------------------
 @Composable
 fun NavGraph(
     navController: NavHostController,
+
+    // Current theme mode selected by the user (System/Light/Dark)
     themeMode: ThemeMode,
+
+    // Callback to update theme mode from inside screens (e.g., ProfileScreen)
     onThemeModeChange: (ThemeMode) -> Unit
 ) {
-    AnimatedNavHost(
+
+    // ---------------------------------------------------------
+    // NavHost
+    // Defines the navigation routes (without accompanist animations).
+    // startDestination = first screen shown when app launches.
+    // ---------------------------------------------------------
+    NavHost(
         navController = navController,
-        startDestination = Routes.LANDING,
-
-        //  Forward navigation animation (push)
-        enterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { it }, // from right
-                animationSpec = tween(260)
-            ) + fadeIn(animationSpec = tween(260))
-        },
-        exitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { -it / 3 }, // to left slightly
-                animationSpec = tween(220)
-            ) + fadeOut(animationSpec = tween(220))
-        },
-
-        //  Back navigation animation (pop)
-        popEnterTransition = {
-            slideInHorizontally(
-                initialOffsetX = { -it / 3 }, // from left slightly
-                animationSpec = tween(220)
-            ) + fadeIn(animationSpec = tween(220))
-        },
-        popExitTransition = {
-            slideOutHorizontally(
-                targetOffsetX = { it }, // to right
-                animationSpec = tween(260)
-            ) + fadeOut(animationSpec = tween(260))
-        }
+        startDestination = Routes.LANDING
     ) {
-        composable(Routes.REPORT) {
-            SystemReportScreen(navController)
-        }
 
-
+        // ---------------------------------------------------------
+        // ROUTE: Landing Screen (first screen)
+        // ---------------------------------------------------------
         composable(Routes.LANDING) {
             LandingScreen(navController)
         }
 
+        // ---------------------------------------------------------
+        // ROUTE: Login Screen with query param admin=true/false
+        // Example: /login?admin=true
+        // ---------------------------------------------------------
         composable(
             route = "${Routes.LOGIN}?admin={admin}",
             arguments = listOf(
@@ -72,10 +59,18 @@ fun NavGraph(
             LoginScreen(navController, adminMode = admin)
         }
 
+        // ---------------------------------------------------------
+        // ROUTE: Register Screen
+        // ---------------------------------------------------------
         composable(Routes.REGISTER) {
             RegisterScreen(navController)
         }
 
+        // ---------------------------------------------------------
+        // ROUTE: MainShell
+        // Contains bottom navigation pages (Dashboard/Profile/etc.)
+        // Theme controls are passed so Profile can update theme.
+        // ---------------------------------------------------------
         composable(Routes.MAIN) {
             MainShell(
                 rootNav = navController,
@@ -84,13 +79,33 @@ fun NavGraph(
             )
         }
 
-        composable("${Routes.TASK_DETAIL}/{taskId}") { backStackEntry ->
+        // ---------------------------------------------------------
+        // ROUTE: Task Detail Screen
+        // Uses a path argument {taskId}
+        // Example: /task_detail/123
+        // ---------------------------------------------------------
+        composable(
+            route = "${Routes.TASK_DETAIL}/{taskId}",
+            arguments = listOf(
+                navArgument("taskId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getString("taskId") ?: ""
             TaskDetailScreen(navController, taskId)
         }
 
+        // ---------------------------------------------------------
+        // ROUTE: Admin Dashboard Screen
+        // ---------------------------------------------------------
         composable(Routes.ADMIN) {
             AdminDashboardScreen(navController)
+        }
+
+        // ---------------------------------------------------------
+        // ROUTE: System Report Screen (Admin feature)
+        // ---------------------------------------------------------
+        composable(Routes.REPORT) {
+            SystemReportScreen(navController)
         }
     }
 }

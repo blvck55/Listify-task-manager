@@ -23,21 +23,31 @@ import kotlinx.coroutines.launch
 @Composable
 fun AddEditScreen() {
 
+    // Detect whether device is phone or tablet for responsive layout
     val screenType = getScreenType()
 
+    // -----------------------------
+    // State variables for form data
+    // -----------------------------
     var title by remember { mutableStateOf("") }
     var taskSub by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var dueDate by remember { mutableStateOf("2026-02-20") }
 
+    // Dropdown state for priority
     var priority by remember { mutableStateOf("Medium") }
     var expanded by remember { mutableStateOf(false) }
 
+    // Reminder switch state
     var reminderOn by remember { mutableStateOf(true) }
 
+    // Snackbar for user feedback
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    // ---------------------------------
+    // Function to reset/clear the form
+    // ---------------------------------
     fun resetForm() {
         title = ""
         taskSub = ""
@@ -48,6 +58,9 @@ fun AddEditScreen() {
         expanded = false
     }
 
+    // ---------------------------------
+    // Custom TextField color styling
+    // ---------------------------------
     val tfColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = MaterialTheme.colorScheme.onSurface,
         unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -61,7 +74,9 @@ fun AddEditScreen() {
         cursorColor = MaterialTheme.colorScheme.primary
     )
 
+    // Background wrapper for consistent UI theme
     BackgroundPage(isLanding = false) {
+
         Scaffold(
             containerColor = Color.Transparent,
             snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -75,6 +90,7 @@ fun AddEditScreen() {
                 contentAlignment = Alignment.TopCenter
             ) {
 
+                // Card container for form layout
                 Card(
                     modifier = Modifier.fillMaxWidth(
                         if (screenType == ScreenType.TABLET) 0.70f else 1f
@@ -91,6 +107,7 @@ fun AddEditScreen() {
                             .verticalScroll(rememberScrollState())
                     ) {
 
+                        // Screen title
                         Text(
                             text = "ADD AND EDIT TASKS",
                             style = MaterialTheme.typography.titleLarge
@@ -98,6 +115,9 @@ fun AddEditScreen() {
 
                         Spacer(Modifier.height(12.dp))
 
+                        // -----------------------------
+                        // TITLE FIELD
+                        // -----------------------------
                         OutlinedTextField(
                             value = title,
                             onValueChange = { title = it },
@@ -108,6 +128,9 @@ fun AddEditScreen() {
 
                         Spacer(Modifier.height(10.dp))
 
+                        // -----------------------------
+                        // TASK SUBTITLE FIELD
+                        // -----------------------------
                         OutlinedTextField(
                             value = taskSub,
                             onValueChange = { taskSub = it },
@@ -118,6 +141,9 @@ fun AddEditScreen() {
 
                         Spacer(Modifier.height(10.dp))
 
+                        // -----------------------------
+                        // DESCRIPTION FIELD (multiline)
+                        // -----------------------------
                         OutlinedTextField(
                             value = description,
                             onValueChange = { description = it },
@@ -130,22 +156,30 @@ fun AddEditScreen() {
 
                         Spacer(Modifier.height(10.dp))
 
+                        // -----------------------------
+                        // DUE DATE FIELD
+                        // -----------------------------
                         OutlinedTextField(
                             value = dueDate,
                             onValueChange = { dueDate = it },
                             label = { Text("DUE DATE (YYYY-MM-DD)") },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Number
+                            ),
                             modifier = Modifier.fillMaxWidth(),
                             colors = tfColors
                         )
 
                         Spacer(Modifier.height(10.dp))
 
+                        // -----------------------------
+                        // PRIORITY DROPDOWN
+                        // -----------------------------
                         Box {
                             OutlinedTextField(
                                 value = priority,
                                 onValueChange = {},
-                                readOnly = true,
+                                readOnly = true, // prevents manual typing
                                 label = { Text("PRIORITY") },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = tfColors,
@@ -153,8 +187,7 @@ fun AddEditScreen() {
                                     IconButton(onClick = { expanded = true }) {
                                         Icon(
                                             Icons.Default.ArrowDropDown,
-                                            contentDescription = "Priority",
-                                            tint = MaterialTheme.colorScheme.onSurface
+                                            contentDescription = "Priority"
                                         )
                                     }
                                 }
@@ -178,6 +211,9 @@ fun AddEditScreen() {
 
                         Spacer(Modifier.height(10.dp))
 
+                        // -----------------------------
+                        // REMINDER SWITCH
+                        // -----------------------------
                         Card(
                             shape = RoundedCornerShape(14.dp),
                             colors = CardDefaults.cardColors(
@@ -191,7 +227,7 @@ fun AddEditScreen() {
                                     .padding(horizontal = 14.dp, vertical = 10.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text("REMINDER", color = MaterialTheme.colorScheme.onSurface)
+                                Text("REMINDER")
                                 Switch(
                                     checked = reminderOn,
                                     onCheckedChange = { reminderOn = it }
@@ -201,38 +237,47 @@ fun AddEditScreen() {
 
                         Spacer(Modifier.height(16.dp))
 
+                        // -----------------------------
+                        // BUTTONS: CANCEL & SAVE
+                        // -----------------------------
                         Row(
                             Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+
+                            // CANCEL BUTTON
                             OutlinedButton(
                                 onClick = {
                                     resetForm()
                                     scope.launch {
-                                        snackbarHostState.showSnackbar("Cancelled and cleared form")
+                                        snackbarHostState.showSnackbar(
+                                            "Cancelled and cleared form"
+                                        )
                                     }
                                 },
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.onSurface
-                                )
+                                modifier = Modifier.weight(1f)
                             ) {
                                 Text("CANCEL")
                             }
 
                             Spacer(Modifier.width(12.dp))
 
+                            // SAVE BUTTON
                             Button(
                                 onClick = {
+
+                                    // Validate title before saving
                                     val safeTitle = title.trim()
                                     if (safeTitle.isBlank()) {
                                         scope.launch {
-                                            snackbarHostState.showSnackbar("Please enter a task title")
+                                            snackbarHostState.showSnackbar(
+                                                "Please enter a task title"
+                                            )
                                         }
                                         return@Button
                                     }
 
+                                    // Save task into in-memory TaskStore
                                     TaskStore.addTask(
                                         title = safeTitle,
                                         taskSub = taskSub.trim(),
@@ -242,18 +287,17 @@ fun AddEditScreen() {
                                         reminder = reminderOn
                                     )
 
+                                    // Clear form after saving
                                     resetForm()
 
+                                    // Show confirmation
                                     scope.launch {
-                                        snackbarHostState.showSnackbar("Task saved to Dashboard (demo)")
+                                        snackbarHostState.showSnackbar(
+                                            "Task saved to Dashboard (demo)"
+                                        )
                                     }
                                 },
-                                shape = RoundedCornerShape(10.dp),
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primary,
-                                    contentColor = MaterialTheme.colorScheme.onPrimary
-                                )
+                                modifier = Modifier.weight(1f)
                             ) {
                                 Text("SAVE")
                             }

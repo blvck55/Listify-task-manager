@@ -2,17 +2,35 @@ package com.example.listify.data
 
 import com.example.listify.model.TaskItem
 
+// ---------------------------------------------------------
+// SAMPLE DATA
+// These lists provide pre-defined tasks for:
+// - TaskDetailScreen
+// - Demo presentation
+// - Initial UI testing
+//
+// NOTE:
+// This data is static and not connected to TaskStore.
+// It is mainly used for demonstration purposes.
+// ---------------------------------------------------------
+
+// ---------------------------------------------------------
+// SAMPLE ACTIVE TASKS
+// Used to simulate real dashboard data
+// ---------------------------------------------------------
 val sampleTasks = listOf(
+
     TaskItem(
-        id = "T1",
+        id = "T1",                                  // Unique task ID
         title = "Finish UI Screens",
         dueDate = "2026-02-20",
         taskSub = "Compose layout",
         description = "Build all screens based on Listify mockups with navigation and dark mode.",
         priority = "High",
         reminder = true,
-        status = "Active"
+        status = "Active"                           // Current task state
     ),
+
     TaskItem(
         id = "T2",
         title = "Prepare 15-min Demo",
@@ -23,6 +41,7 @@ val sampleTasks = listOf(
         reminder = true,
         status = "Active"
     ),
+
     TaskItem(
         id = "T3",
         title = "Commit to GitHub",
@@ -35,7 +54,12 @@ val sampleTasks = listOf(
     )
 )
 
+// ---------------------------------------------------------
+// SAMPLE COMPLETED TASKS (History)
+// Used to simulate completed task history
+// ---------------------------------------------------------
 val sampleHistory = listOf(
+
     TaskItem(
         id = "H1",
         title = "Design Mockups",
@@ -44,6 +68,6 @@ val sampleHistory = listOf(
         description = "Completed landing, login, register, dashboard, history, add/edit mockups.",
         priority = "Medium",
         reminder = false,
-        status = "Completed"
+        status = "Completed"                        // Completed state
     )
 )

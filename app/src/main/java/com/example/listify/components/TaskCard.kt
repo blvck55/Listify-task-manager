@@ -102,9 +102,10 @@ fun TaskCard(
                     Spacer(Modifier.height(4.dp))
 
                     Text(
-                        text = if (task.description.isNotBlank()) task.description else "No description (demo).",
+                        text = task.description.ifBlank { "No description (demo)." },
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
                     )
+
 
                     Spacer(Modifier.height(8.dp))
 

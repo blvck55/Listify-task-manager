@@ -21,16 +21,22 @@ import com.example.listify.utils.getScreenType
 @Composable
 fun HistoryScreen() {
 
+    // Detect device type for responsive layout
     val screenType = getScreenType()
 
+    // Stores current filter mode (All or Completed)
     var filterMode by remember { mutableStateOf("All") }
+
+    // Controls visibility of filter dialog
     var showFilter by remember { mutableStateOf(false) }
 
+    // Determine which items to display based on selected filter
     val itemsToShow = when (filterMode) {
         "Completed" -> TaskStore.history.filter { it.status == "Completed" }
         else -> TaskStore.history
     }
 
+    // Background wrapper for consistent UI styling
     BackgroundPage(isLanding = false) {
 
         Box(
@@ -46,7 +52,9 @@ fun HistoryScreen() {
                 )
             ) {
 
-                // HEADER CARD
+                // --------------------------------------------------
+                // HEADER SECTION (Title + Filter Icon)
+                // --------------------------------------------------
                 Card(
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
@@ -60,12 +68,16 @@ fun HistoryScreen() {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+
+                        // Screen title
                         Text(
                             "HISTORY",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.onSurface
                         )
+
+                        // Filter button opens filter dialog
                         IconButton(onClick = { showFilter = true }) {
                             Icon(
                                 Icons.Default.FilterList,
@@ -78,7 +90,10 @@ fun HistoryScreen() {
 
                 Spacer(Modifier.height(12.dp))
 
-                // TASK LIST
+                // --------------------------------------------------
+                // TASK HISTORY LIST
+                // Displays filtered history items
+                // --------------------------------------------------
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.weight(1f)
@@ -86,20 +101,30 @@ fun HistoryScreen() {
                     items(itemsToShow) { task ->
                         HistoryCard(task)
                     }
+
+                    // Bottom spacing to prevent overlap with footer
                     item { Spacer(Modifier.height(60.dp)) }
                 }
 
                 Spacer(Modifier.height(12.dp))
 
+                // Footer navigation links
                 FooterLinks()
             }
         }
 
+        // --------------------------------------------------
         // FILTER DIALOG
+        // Allows user to filter history list
+        // --------------------------------------------------
         if (showFilter) {
             AlertDialog(
                 onDismissRequest = { showFilter = false },
+
+                // Dialog title
                 title = { Text("Filter") },
+
+                // Filter options (Radio buttons)
                 text = {
                     Column {
                         FilterOption("All", filterMode == "All") {
@@ -110,6 +135,8 @@ fun HistoryScreen() {
                         }
                     }
                 },
+
+                // Confirm button closes dialog
                 confirmButton = {
                     TextButton(onClick = { showFilter = false }) {
                         Text("OK")
@@ -120,8 +147,13 @@ fun HistoryScreen() {
     }
 }
 
+// --------------------------------------------------
+// HISTORY CARD COMPONENT
+// Displays individual completed task details
+// --------------------------------------------------
 @Composable
 private fun HistoryCard(task: TaskItem) {
+
     Card(
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(
@@ -131,6 +163,7 @@ private fun HistoryCard(task: TaskItem) {
     ) {
         Column(Modifier.padding(14.dp)) {
 
+            // Task Name Section
             Text(
                 "TASK NAME",
                 fontWeight = FontWeight.Bold,
@@ -140,6 +173,7 @@ private fun HistoryCard(task: TaskItem) {
 
             Spacer(Modifier.height(6.dp))
 
+            // Date Completed Section
             Text(
                 "DATE COMPLETED",
                 fontWeight = FontWeight.Bold,
@@ -149,6 +183,7 @@ private fun HistoryCard(task: TaskItem) {
 
             Spacer(Modifier.height(6.dp))
 
+            // Status Section
             Text(
                 "STATUS",
                 fontWeight = FontWeight.Bold,
@@ -159,8 +194,16 @@ private fun HistoryCard(task: TaskItem) {
     }
 }
 
+// --------------------------------------------------
+// FILTER OPTION COMPONENT
+// Reusable radio button row for filter selection
+// --------------------------------------------------
 @Composable
-private fun FilterOption(label: String, selected: Boolean, onSelect: () -> Unit) {
+private fun FilterOption(
+    label: String,
+    selected: Boolean,
+    onSelect: () -> Unit
+) {
     Row(
         Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -171,6 +214,10 @@ private fun FilterOption(label: String, selected: Boolean, onSelect: () -> Unit)
     }
 }
 
+// --------------------------------------------------
+// FOOTER LINKS COMPONENT
+// Simple informational links at bottom of screen
+// --------------------------------------------------
 @Composable
 private fun FooterLinks() {
     Row(
