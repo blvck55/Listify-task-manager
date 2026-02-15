@@ -6,6 +6,8 @@ import androidx.compose.animation.core.*
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -27,23 +29,22 @@ import com.example.listify.navigation.Routes
 import com.example.listify.utils.ScreenType
 import com.example.listify.utils.getScreenType
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
 
-    // Stores error message shown under the password field
+    // Error message shown under the fields
     var error by remember { mutableStateOf("") }
 
-    // Form input states
+    // Form inputs
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    // Detect device type for responsive card width
+    // Detect device type for responsive width
     val screenType = getScreenType()
 
     // ---------------------------------------------------------
-    // Screen entrance animation: delays then shows content
+    // Entrance animation: delay then show card
     // ---------------------------------------------------------
     var showContent by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
@@ -66,18 +67,20 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
     )
 
     // ---------------------------------------------------------
-    // Button press micro-animation: scales slightly when pressed
+    // Button press animation (NO manual state -> no warnings)
+    // Uses Material interaction system
     // ---------------------------------------------------------
-    var pressed by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
     val buttonScale by animateFloatAsState(
-        targetValue = if (pressed) 0.97f else 1f,
+        targetValue = if (isPressed) 0.97f else 1f,
         animationSpec = tween(120, easing = FastOutSlowInEasing),
         label = "btnScale"
     )
-    val scope = rememberCoroutineScope()
 
     // ---------------------------------------------------------
-    // Shared OutlinedTextField colors (glass style + consistent UI)
+    // Shared OutlinedTextField styling (glass look)
     // ---------------------------------------------------------
     val tfColors = OutlinedTextFieldDefaults.colors(
         focusedTextColor = MaterialTheme.colorScheme.onSurface,
@@ -91,10 +94,9 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
         cursorColor = MaterialTheme.colorScheme.primary
     )
 
-    // Background wrapper for consistent theme/styling
+    // Background wrapper for consistent UI
     BackgroundPage(isLanding = false) {
 
-        // Center the login card in the screen
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -102,7 +104,6 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
             contentAlignment = Alignment.Center
         ) {
 
-            // AnimatedVisibility adds fade + slide entrance transition
             AnimatedVisibility(
                 visible = showContent,
                 enter = fadeIn(tween(350)) + slideInVertically(
@@ -111,7 +112,6 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
                 )
             ) {
 
-                // Glass-style login panel
                 Card(
                     modifier = Modifier.fillMaxWidth(
                         if (screenType == ScreenType.TABLET) 0.55f else 1f
@@ -127,7 +127,7 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
 
-                        // App logo (with floating animation offset)
+                        // Logo with floating motion
                         Image(
                             painter = painterResource(R.drawable.listify_logo),
                             contentDescription = null,
@@ -138,7 +138,7 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
 
                         Spacer(Modifier.height(10.dp))
 
-                        // Title changes depending on admin/user mode
+                        // Title changes depending on mode
                         Text(
                             text = if (adminMode) "ADMIN\nLOGIN" else "WELCOME\nBACK!",
                             style = MaterialTheme.typography.headlineMedium,
@@ -148,10 +148,7 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
 
                         Spacer(Modifier.height(14.dp))
 
-                        // ---------------------------------------------------------
-                        // Email input field
-                        // Clears error when user starts typing again
-                        // ---------------------------------------------------------
+                        // Email field
                         OutlinedTextField(
                             value = email,
                             onValueChange = { email = it; error = "" },
@@ -163,20 +160,18 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
 
                         Spacer(Modifier.height(10.dp))
 
-                        // ---------------------------------------------------------
-                        // Password input field (hidden text)
-                        // Clears error when user starts typing again
-                        // ---------------------------------------------------------
+                        // Password field
                         OutlinedTextField(
                             value = password,
                             onValueChange = { password = it; error = "" },
                             label = { Text("Password") },
                             visualTransformation = PasswordVisualTransformation(),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             modifier = Modifier.fillMaxWidth(),
                             colors = tfColors
                         )
 
-                        // Show validation or login errors
+                        // Error label
                         if (error.isNotBlank()) {
                             Spacer(Modifier.height(10.dp))
                             Text(error, color = MaterialTheme.colorScheme.error)
@@ -184,47 +179,45 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
 
                         Spacer(Modifier.height(14.dp))
 
-                        // ---------------------------------------------------------
-                        // Login button
-                        // Performs input validation + calls AuthManager login
-                        // ---------------------------------------------------------
+                        // Login button (with press scale micro-interaction)
                         Button(
+                            interactionSource = interactionSource,
                             onClick = {
-                                // Read safe/trimmed inputs
                                 val e = email.trim()
                                 val p = password.trim()
 
-                                // Validate email format
+                                // Validate email
                                 if (!Patterns.EMAIL_ADDRESS.matcher(e).matches()) {
                                     error = "Enter a valid email address"
                                     return@Button
                                 }
 
-                                // Validate password length (basic rule for demo)
+                                // Validate password length
                                 if (p.length < 6) {
                                     error = "Password must be at least 6 characters"
                                     return@Button
                                 }
 
-                                // Trigger button press animation feedback
-                                pressed = true
-                                scope.launch { delay(90); pressed = false }
+                                // Check credentials based on mode
+                                val ok = if (adminMode) {
+                                    AuthManager.loginAdmin(e, p)
+                                } else {
+                                    AuthManager.loginUser(e, p)
+                                }
 
-                                // Perform role-based credential validation
-                                if (adminMode) {
-                                    val ok = AuthManager.loginAdmin(e, p)
-                                    if (ok) {
-                                        nav.navigate(Routes.ADMIN)
-                                    } else {
-                                        error = "Invalid admin credentials (admin@listify.com / Admin123)"
+                                if (ok) {
+                                    val destination = if (adminMode) Routes.ADMIN else Routes.MAIN
+
+                                    // Clear login from back stack (optional but clean)
+                                    nav.navigate(destination) {
+                                        popUpTo(Routes.LANDING) { inclusive = false }
+                                        launchSingleTop = true
                                     }
                                 } else {
-                                    val ok = AuthManager.loginUser(e, p)
-                                    if (ok) {
-                                        nav.navigate(Routes.MAIN)
-                                    } else {
-                                        error = "Invalid user credentials (user@listify.com / User123)"
-                                    }
+                                    error = if (adminMode)
+                                        "Invalid admin credentials (admin@listify.com / Admin123)"
+                                    else
+                                        "Invalid user credentials (user@listify.com / User123)"
                                 }
                             },
                             modifier = Modifier
@@ -241,11 +234,7 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
 
                         Spacer(Modifier.height(10.dp))
 
-                        // ---------------------------------------------------------
-                        // Navigation link under the button
-                        // User mode -> go to Register
-                        // Admin mode -> go back to User login
-                        // ---------------------------------------------------------
+                        // Bottom link changes based on mode
                         if (!adminMode) {
                             TextButton(onClick = { nav.navigate(Routes.REGISTER) }) {
                                 Text("Don’t have an account? REGISTER")
@@ -256,9 +245,7 @@ fun LoginScreen(nav: NavHostController, adminMode: Boolean) {
                             }
                         }
 
-                        // ---------------------------------------------------------
-                        // Demo helper line to show test credentials
-                        // ---------------------------------------------------------
+                        // Demo helper credentials
                         Spacer(Modifier.height(6.dp))
                         Text(
                             text = if (adminMode)
