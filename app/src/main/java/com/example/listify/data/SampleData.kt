@@ -2,22 +2,20 @@ package com.example.listify.data
 
 import com.example.listify.model.TaskItem
 
-// ---------------------------------------------------------
+
 // SAMPLE DATA
 // These lists provide pre-defined tasks for:
 // - TaskDetailScreen
-// - Demo presentation
+// - Demo
 // - Initial UI testing
 //
 // NOTE:
 // This data is static and not connected to TaskStore.
 // It is mainly used for demonstration purposes.
-// ---------------------------------------------------------
 
-// ---------------------------------------------------------
 // SAMPLE ACTIVE TASKS
 // Used to simulate real dashboard data
-// ---------------------------------------------------------
+
 val sampleTasks = listOf(
 
     TaskItem(

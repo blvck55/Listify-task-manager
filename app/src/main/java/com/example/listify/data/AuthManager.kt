@@ -22,7 +22,7 @@ enum class UserRole {
 // NOTE:
 // This is NOT secure authentication.
 // It is only for demo/testing purposes.
-// Credentials are hardcoded for presentation.
+// Credentials are hardcoded for temporary use
 // ---------------------------------------------------------
 object AuthManager {
 
@@ -33,7 +33,6 @@ object AuthManager {
 
     // ---------------------------------------------------------
     // Demo credentials (used in LoginScreen)
-    // Mention these in your demo/report if required.
     // ---------------------------------------------------------
     private const val ADMIN_EMAIL = "admin@listify.com"
     private const val ADMIN_PASSWORD = "Admin123"

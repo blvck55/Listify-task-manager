@@ -10,12 +10,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-// ---------------------------------------------------------
+
 // RoleBadge Component
 // Displays a small rounded label indicating user role.
 // Used in:
 // - DashboardScreen (shows ADMIN / USER / GUEST)
-// ---------------------------------------------------------
 @Composable
 fun RoleBadge(label: String) {
 

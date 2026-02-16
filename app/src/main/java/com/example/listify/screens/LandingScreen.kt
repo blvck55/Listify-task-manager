@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -13,13 +14,16 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.listify.R
 import com.example.listify.components.BackgroundPage
+import com.example.listify.data.TaskStore
 import com.example.listify.navigation.Routes
 
 @Composable
 fun LandingScreen(nav: NavHostController) {
 
-    // BackgroundPage provides the landing-specific background styling
+
+
     BackgroundPage(isLanding = true) {
+
 
         // Main layout: centered content with padding
         Column(
@@ -119,7 +123,7 @@ fun LandingScreen(nav: NavHostController) {
                     Spacer(Modifier.height(8.dp))
 
                     // ---------------------------------------------------------
-                    // ADMIN LOGIN button (navigates to login screen with admin=true)
+                    // ADMIN LOGIN button (navigates to log in screen with admin=true)
                     // admin=true can be used to show admin-specific login behavior
                     // ---------------------------------------------------------
                     OutlinedButton(
